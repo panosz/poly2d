@@ -23,3 +23,18 @@ def test_Poly2D():
     desired = explicit_poly(x, y)
 
     nt.assert_allclose(result, desired)
+
+
+def test_Poly2D_fit():
+    n_samples = 100
+    x_sample, y_sample = 10*RNG.random(size=(2, n_samples)) - 5
+    x_test, y_test = 10*RNG.random(size=(2, n_samples)) - 5
+
+    z_s = explicit_poly2(x_sample, y_sample)
+    z_t = explicit_poly2(x_test, y_test)
+
+    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5)
+
+    z_f = poly(x_test, y_test)
+
+    nt.assert_allclose(z_f, z_t)
