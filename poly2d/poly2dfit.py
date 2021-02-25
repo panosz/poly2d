@@ -1,18 +1,6 @@
 from functools import reduce
 import numpy as np
 from numpy.polynomial.polynomial import polyval2d
-import matplotlib.pyplot as plt
-nx = 3
-ny = 4
-
-x = np.linspace(0, 1, num=400)
-y = np.linspace(0, 7, num=500)
-
-#  grid coords
-x, y = np.meshgrid(x, y)
-z = x*2*y*3 - x*y**4
-
-plt.contour(x, y, z)
 
 
 def powers(x, n):
@@ -117,6 +105,7 @@ def poly2fit(x, y, z, nx, ny, scale=True):
     if scale:
         c /= scale_coefs
     return c
+
 
 def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
     r"""
@@ -248,18 +237,3 @@ def der_coefs(n, degree):
     arrays = [np.arange(i, i + m_elems) for i in range(1, n+1)]
     return reduce(np.multiply, arrays)
 
-
-my_poly = Poly2D.fit(x, y, z, 4, 9)
-zf = my_poly(x, y)
-
-
-A = np.zeros((6, 4))
-
-A[5, 0] = 1
-A[4, 3] = 3
-A[1, 3] = -2
-A[0, 0] = 7
-
-Pa = Poly2D(A)
-
-dPa = Pa.der_x(3)
