@@ -14,6 +14,7 @@ z = x*2*y*3 - x*y**4
 
 plt.contour(x, y, z)
 
+
 def powers(x, n):
     """
     Calculate the powers of x up to order n,
@@ -117,6 +118,33 @@ def poly2fit(x, y, z, nx, ny, scale=True):
         c /= scale_coefs
     return c
 
+def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
+    r"""
+    same as poly2fit, but c00 = 0, which corresponds to (x,y)=(0,0) =>z=0
+    linear system a.T table will have the 1st column removed because we want/set c00=0
+    thus a table will have the 1st row removed
+    """
+
+    if scale:
+        max_abs_x = np.max(np.abs(x))
+        max_abs_y = np.max(np.abs(y))
+        scale_coefs = monomials(max_abs_x, max_abs_y, nx, ny)
+        scale_coefs = scale_coefs[:, :, 0]
+
+        x = x.copy()  # avoid making changes to the input vectors
+        y = y.copy()
+        x /= max_abs_x
+        y /= max_abs_y
+
+    a = coefs(x, y, nx, ny)
+    a_reduced = a[1:,:].T                               # modified table for c00=0 (x,y,z)=(0,0,0)
+    c, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
+    c = np.append(c,[0])                                # append the c00=0 at the end of the array
+    c = np.roll(c,1)                                    # roll elements to bring c00 at the beggining of the array
+    c = c.reshape(nx+1, ny+1)
+    if scale:
+        c /= scale_coefs
+    return c
 
 class Poly2D():
     def __init__(self, coefs):
@@ -163,6 +191,19 @@ class Poly2D():
         y = np.ravel(y)
         z = np.ravel(z)
         coefs = poly2fit(x, y, z, nx, ny, scale=scale)
+        return cls(coefs)
+
+    @classmethod
+    def fit_c00_equals_0(cls, x, y, z, nx, ny, scale=True):
+        """
+        same as fit, but c00 = 0, which corresponds to (x,y)=(0,0) =>z=0
+
+        """
+        x = np.ravel(x)
+        y = np.ravel(y)
+        z = np.ravel(z)
+        coefs = poly2fit_c00_equals_0(x, y, z, nx, ny, scale=scale)
+
         return cls(coefs)
 
     def der_x(self, n):
