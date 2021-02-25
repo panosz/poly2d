@@ -1,4 +1,4 @@
-from functools import reduce
+from functools import reduce, wraps
 import numpy as np
 from numpy.polynomial.polynomial import polyval2d
 
@@ -64,6 +64,55 @@ def coefs(x, y, nx, ny):
     return mons.reshape(-1, mons.shape[-1])
 
 
+def _calculate_scaling_coefficients(x, y, nx, ny):
+    """
+    To be used with coefficient estimators in order to support
+    pre-scaling functionality for better numerical stability.
+
+    Calculates the scaled samples `x_scale`, `y_scale` and the normalization
+    coefficients 'n_c'.
+
+    For a coefficient estimator `f` the expression
+
+        `f(x_scaled, y_scaled) / n_c`
+
+    is equivalent with calling the estimator with the unscaled samples, only
+    with better numerical stability.
+
+    Returns:
+    --------
+    x_scaled, y_scaled: the scaled samples
+
+    n_c: the normalization coefficients
+    """
+    max_abs_x = np.max(np.abs(x))
+    max_abs_y = np.max(np.abs(y))
+    n_c = monomials(max_abs_x, max_abs_y, nx, ny)
+    n_c = n_c[:, :, 0]
+    return x/max_abs_x, y/max_abs_y, n_c
+
+
+
+def pre_scaling_wrapper(coefficient_estimator):
+    """
+    Wrapper to a coefficient estimator to support pre-scaling of the
+    samples for better numerical stability.
+
+    The signature of the estimator must be of the form
+    f(x, y, z, nx, ny, scale=True, **kwargs)
+    """
+    @wraps(coefficient_estimator)
+    def wrapper(x, y, z, nx, ny, scale=True, **kwargs):
+        if scale:
+            x_s, y_s, n_c = _calculate_scaling_coefficients(x, y, nx, ny)
+            c = coefficient_estimator(x_s, y_s, z, nx, ny, scale, **kwargs)
+            return c / n_c
+        else:
+            return coefficient_estimator(x, y, z, nx, ny, scale, **kwargs)
+    return wrapper
+
+
+@pre_scaling_wrapper
 def poly2fit(x, y, z, nx, ny, scale=True):
     r"""
     Fit a 2D polynomial to a set of data.
@@ -87,26 +136,13 @@ def poly2fit(x, y, z, nx, ny, scale=True):
             p(x,y) = \sum_{i,j} c_{i,j} x^i y^j
 
     """
-
-    if scale:
-        max_abs_x = np.max(np.abs(x))
-        max_abs_y = np.max(np.abs(y))
-        scale_coefs = monomials(max_abs_x, max_abs_y, nx, ny)
-        scale_coefs = scale_coefs[:, :, 0]
-
-        x = x.copy()  # avoid making changes to the input vectors
-        y = y.copy()
-        x /= max_abs_x
-        y /= max_abs_y
-
     a = coefs(x, y, nx, ny)
     c, *_ = np.linalg.lstsq(a.T, z, rcond=None)
     c = c.reshape(nx+1, ny+1)
-    if scale:
-        c /= scale_coefs
     return c
 
 
+@pre_scaling_wrapper
 def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
     r"""
     same as poly2fit, but c00 = 0, which corresponds to (x,y)=(0,0) =>z=0
@@ -114,25 +150,12 @@ def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
     thus a table will have the 1st row removed
     """
 
-    if scale:
-        max_abs_x = np.max(np.abs(x))
-        max_abs_y = np.max(np.abs(y))
-        scale_coefs = monomials(max_abs_x, max_abs_y, nx, ny)
-        scale_coefs = scale_coefs[:, :, 0]
-
-        x = x.copy()  # avoid making changes to the input vectors
-        y = y.copy()
-        x /= max_abs_x
-        y /= max_abs_y
-
     a = coefs(x, y, nx, ny)
     a_reduced = a[1:,:].T                               # modified table for c00=0 (x,y,z)=(0,0,0)
     c, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
     c = np.append(c,[0])                                # append the c00=0 at the end of the array
     c = np.roll(c,1)                                    # roll elements to bring c00 at the beggining of the array
     c = c.reshape(nx+1, ny+1)
-    if scale:
-        c /= scale_coefs
     return c
 
 class Poly2D():
@@ -154,7 +177,7 @@ class Poly2D():
 
     @classmethod
     def fit(cls, x, y, z, nx, ny, scale=True):
-        """
+        r"""
         Create a 2D polynomial by fitting to a set of data.
 
         x, y, z: array
