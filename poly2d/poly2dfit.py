@@ -14,7 +14,6 @@ z = x*2*y*3 - x*y**4
 
 plt.contour(x, y, z)
 
-
 def powers(x, n):
     """
     Calculate the powers of x up to order n,
