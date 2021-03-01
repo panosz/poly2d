@@ -151,10 +151,9 @@ def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
     """
 
     a = coefs(x, y, nx, ny)
-    a_reduced = a[1:,:].T                               # modified table for c00=0 (x,y,z)=(0,0,0)
+    a_reduced = a[1:, :].T                               # modified table for c00=0 (x,y,z)=(0,0,0)
     c, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
-    c = np.append(c,[0])                                # append the c00=0 at the end of the array
-    c = np.roll(c,1)                                    # roll elements to bring c00 at the beggining of the array
+    c = np.insert(c, 0, values=0)
     c = c.reshape(nx+1, ny+1)
     return c
 
