@@ -157,6 +157,44 @@ def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
     c = c.reshape(nx+1, ny+1)
     return c
 
+
+def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
+    r"""
+    same as poly2fit, but c01 = c10 = 0, which correspond to (x,y)=(0,0) =>grad=0
+    linear system a.T table will have the 2cd (for c01), and the (nx+2)th
+    (for c10) columns
+    thus a table will have 2 rows removed
+    """
+
+    if scale:
+        max_abs_x = np.max(np.abs(x))
+        max_abs_y = np.max(np.abs(y))
+        scale_coefs = monomials(max_abs_x, max_abs_y, nx, ny)
+        scale_coefs = scale_coefs[:, :, 0]
+
+        x = x.copy()  # avoid making changes to the input vectors
+        y = y.copy()
+        x /= max_abs_x
+        y /= max_abs_y
+
+    a = coefs(x, y, nx, ny)
+    a1_reduced = a[0:1,:]
+    a2_reduced = a[2:ny+1,:]
+    a3_reduced = a[ny+2:,:]
+    a_reduced = np.concatenate((a1_reduced,a2_reduced),axis=0)
+    a_reduced = np.concatenate((a_reduced,a3_reduced),axis=0)
+
+    a_reduced = a_reduced.T                             # modified table for c00=0 (x,y,z)=(0,0,0)
+    c, residual, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
+    print("residual=",residual)
+    c = np.insert(c,1,0)                                # insert c01=0
+    c = np.insert(c,ny+1,0)                             # insert c10=0
+    c = c.reshape(nx+1, ny+1)
+    if scale:
+        c /= scale_coefs
+    return c
+
+
 class Poly2D():
     def __init__(self, coefs):
         self.c = coefs
@@ -214,6 +252,18 @@ class Poly2D():
         y = np.ravel(y)
         z = np.ravel(z)
         coefs = poly2fit_c00_equals_0(x, y, z, nx, ny, scale=scale)
+
+        return cls(coefs)
+
+    @classmethod
+    def fit_c01c10_equals_0(cls, x, y, z, nx, ny, scale=True):
+        """
+        same as fit, but c01 = c10 = 0, which corresponds to (x,y)=(0,0) =>grad=0
+        """
+        x = np.ravel(x)
+        y = np.ravel(y)
+        z = np.ravel(z)
+        coefs = poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=scale)
 
         return cls(coefs)
 
