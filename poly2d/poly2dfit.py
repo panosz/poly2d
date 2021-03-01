@@ -157,23 +157,13 @@ def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
     return c
 
 
+@pre_scaling_wrapper
 def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
     r"""
     same as poly2fit, but c01 = c10 = 0, which correspond to (x,y)=(0,0)
     =>grad=0 linear system a.T table will have the 2cd (for c01), and the
     (nx+2)th (for c10) columns thus a table will have 2 rows removed
     """
-
-    if scale:
-        max_abs_x = np.max(np.abs(x))
-        max_abs_y = np.max(np.abs(y))
-        scale_coefs = monomials(max_abs_x, max_abs_y, nx, ny)
-        scale_coefs = scale_coefs[:, :, 0]
-
-        x = x.copy()  # avoid making changes to the input vectors
-        y = y.copy()
-        x /= max_abs_x
-        y /= max_abs_y
 
     a = coefs(x, y, nx, ny)
     a1_reduced = a[0:1, :]
@@ -188,8 +178,6 @@ def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
     c = np.insert(c, 1, 0)                                # insert c01=0
     c = np.insert(c, ny+1, 0)                             # insert c10=0
     c = c.reshape(nx+1, ny+1)
-    if scale:
-        c /= scale_coefs
     return c
 
 
