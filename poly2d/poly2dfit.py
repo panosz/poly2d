@@ -92,7 +92,6 @@ def _calculate_scaling_coefficients(x, y, nx, ny):
     return x/max_abs_x, y/max_abs_y, n_c
 
 
-
 def pre_scaling_wrapper(coefficient_estimator):
     """
     Wrapper to a coefficient estimator to support pre-scaling of the
@@ -146,12 +145,12 @@ def poly2fit(x, y, z, nx, ny, scale=True):
 def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
     r"""
     same as poly2fit, but c00 = 0, which corresponds to (x,y)=(0,0) =>z=0
-    linear system a.T table will have the 1st column removed because we want/set c00=0
-    thus a table will have the 1st row removed
+    linear system a.T table will have the 1st column removed because we
+    want/set c00=0 thus a table will have the 1st row removed
     """
 
     a = coefs(x, y, nx, ny)
-    a_reduced = a[1:, :].T                               # modified table for c00=0 (x,y,z)=(0,0,0)
+    a_reduced = a[1:, :].T  # modified table for c00=0 (x,y,z)=(0,0,0)
     c, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
     c = np.insert(c, 0, values=0)
     c = c.reshape(nx+1, ny+1)
@@ -160,10 +159,9 @@ def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
 
 def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
     r"""
-    same as poly2fit, but c01 = c10 = 0, which correspond to (x,y)=(0,0) =>grad=0
-    linear system a.T table will have the 2cd (for c01), and the (nx+2)th
-    (for c10) columns
-    thus a table will have 2 rows removed
+    same as poly2fit, but c01 = c10 = 0, which correspond to (x,y)=(0,0)
+    =>grad=0 linear system a.T table will have the 2cd (for c01), and the
+    (nx+2)th (for c10) columns thus a table will have 2 rows removed
     """
 
     if scale:
@@ -178,17 +176,17 @@ def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
         y /= max_abs_y
 
     a = coefs(x, y, nx, ny)
-    a1_reduced = a[0:1,:]
-    a2_reduced = a[2:ny+1,:]
-    a3_reduced = a[ny+2:,:]
-    a_reduced = np.concatenate((a1_reduced,a2_reduced),axis=0)
-    a_reduced = np.concatenate((a_reduced,a3_reduced),axis=0)
+    a1_reduced = a[0:1, :]
+    a2_reduced = a[2:ny+1, :]
+    a3_reduced = a[ny+2:, :]
+    a_reduced = np.concatenate((a1_reduced, a2_reduced), axis=0)
+    a_reduced = np.concatenate((a_reduced, a3_reduced), axis=0)
 
-    a_reduced = a_reduced.T                             # modified table for c00=0 (x,y,z)=(0,0,0)
+    a_reduced = a_reduced.T  # modified table for c00=0 (x,y,z)=(0,0,0)
     c, residual, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
-    print("residual=",residual)
-    c = np.insert(c,1,0)                                # insert c01=0
-    c = np.insert(c,ny+1,0)                             # insert c10=0
+    print("residual=", residual)
+    c = np.insert(c, 1, 0)                                # insert c01=0
+    c = np.insert(c, ny+1, 0)                             # insert c10=0
     c = c.reshape(nx+1, ny+1)
     if scale:
         c /= scale_coefs
@@ -258,7 +256,8 @@ class Poly2D():
     @classmethod
     def fit_c01c10_equals_0(cls, x, y, z, nx, ny, scale=True):
         """
-        same as fit, but c01 = c10 = 0, which corresponds to (x,y)=(0,0) =>grad=0
+        same as fit, but c01 = c10 = 0, which corresponds to (x,y)=(0,0)
+        =>grad=0
         """
         x = np.ravel(x)
         y = np.ravel(y)
