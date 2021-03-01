@@ -169,14 +169,15 @@ def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
     a1_reduced = a[0:1, :]
     a2_reduced = a[2:ny+1, :]
     a3_reduced = a[ny+2:, :]
-    a_reduced = np.concatenate((a1_reduced, a2_reduced), axis=0)
-    a_reduced = np.concatenate((a_reduced, a3_reduced), axis=0)
+    a_reduced = np.concatenate((a1_reduced,
+                                a2_reduced,
+                                a3_reduced,
+                                ), axis=0)
 
     a_reduced = a_reduced.T  # modified table for c00=0 (x,y,z)=(0,0,0)
     c, residual, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
-    print("residual=", residual)
-    c = np.insert(c, 1, 0)                                # insert c01=0
-    c = np.insert(c, ny+1, 0)                             # insert c10=0
+    c = np.insert(c, 1, 0)   # insert c01=0
+    c = np.insert(c, ny+1, 0)   # insert c10=0
     c = c.reshape(nx+1, ny+1)
     return c
 
