@@ -9,6 +9,9 @@ def explicit_poly1(x, y):
 def explicit_poly2(x, y):
     return x*2*y*3 - x*y**4
 
+def explicit_poly3(x, y):
+    return x*2*y*3 - x*y**4 + 1e-5*x +1e-5*y
+
 
 RNG = np.random.default_rng(seed=0)
 
@@ -62,6 +65,24 @@ def test_Poly2D_fit_c00_equals_0():
 
     assert poly.c[0, 0] == 0
     assert poly(0, 0) == 0
+
+
+def test_Poly2D_fit_c01c10_equals_0():
+    n_samples = 100
+    x_sample, y_sample = 100*RNG.random(size=(2, n_samples)) - 5
+    x_test, y_test = 100*RNG.random(size=(2, n_samples)) - 5
+
+    z_s = explicit_poly3(x_sample, y_sample)
+    z_t = explicit_poly3(x_test, y_test)
+
+    poly = pf.Poly2D.fit_c01c10_equals_0(x_sample, y_sample, z_s, nx=4, ny=5)
+
+    z_f = poly(x_test, y_test)
+
+    nt.assert_allclose(z_f, z_t, rtol=1e-5, atol=1e-5)
+
+    assert poly.der_x(1)(0, 0) == 0
+    assert poly.der_y(1)(0, 0) == 0
 
 #  def test_Poly2D_fit_few_samples():
     #  n_samples = 3
