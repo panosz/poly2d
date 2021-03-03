@@ -32,10 +32,10 @@ class PolyCollection:
         x_i: array like, shape (M,)
             x-coordinates of the M sample points
 
-        y_i: array like, shape (M, K)
+        y_i: array like, shape (K, M)
             y-coordinates of the sample points. Several data sets of sample
             points sharing the same x-coordinates can be fitted at once by
-            passing in a 2D-array that contains one dataset per column.
+            passing in a 2D-array that contains one dataset per row.
 
         deg : int
             Degree of the fitting polynomials.
