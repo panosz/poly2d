@@ -52,7 +52,7 @@ class FourierSeries:
         """
         return type(self)(self.coefs[:n], self.T)
 
-    def derivative(self, m):
+    def deriv(self, m):
         params = (1j * 2 * np.pi * self.frequencies())**m
 
         coefs = params * self.coefs[1:]

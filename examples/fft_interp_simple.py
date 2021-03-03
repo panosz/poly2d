@@ -29,5 +29,5 @@ plt.plot(t_i, f_c.filter(10)(t_i), 'g+')
 fig, ax = plt.subplots()
 
 ax.plot(t_i, d2_my_signal1(t_i))
-ax.plot(t_i, f_c.derivative(2)(t_i))
+ax.plot(t_i, f_c.deriv(2)(t_i))
 plt.show()
