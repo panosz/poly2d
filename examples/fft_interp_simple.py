@@ -21,19 +21,13 @@ f_c = FourierSeries.from_samples(x_s, T=2*np.pi)
 
 t_i = np.linspace(0, 10, 1000)
 
-x_i = f_c(t_i)
-
-f_f = f_c.filter(10)
-
-x_ii = f_f(t_i)
 plt.plot(t_s, x_s)
-plt.plot(t_i, np.squeeze(x_i), 'r')
-plt.plot(t_i, np.squeeze(x_ii), 'g')
+plt.plot(t_i, f_c(t_i) , 'r')
+plt.plot(t_i, f_c.filter(10)(t_i), 'g+')
 
 
-df_c_2 = f_c.derivative(2)
 fig, ax = plt.subplots()
 
 ax.plot(t_i, d2_my_signal1(t_i))
-ax.plot(t_i, df_c_2(t_i))
+ax.plot(t_i, f_c.derivative(2)(t_i))
 plt.show()
