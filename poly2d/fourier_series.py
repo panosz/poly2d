@@ -8,7 +8,7 @@ class FourierSeries:
     """
 
     def __init__(self, coefs, T):
-        self.coefs = np.array(coefs)
+        self.coefs = np.array(coefs).ravel()
         self.T = T
 
     @property
