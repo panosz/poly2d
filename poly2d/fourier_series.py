@@ -61,3 +61,47 @@ class FourierSeries:
 
         return type(self)(coefs, self.T)
 
+
+class FourierSeriesCollection:
+    """
+    A collection of fourier series
+    """
+    def __init__(self, fss):
+        self.fss = fss
+
+    def __call__(self, x_i):
+        x_i = np.ravel(x_i)
+        return np.vstack([f(x_i) for f in self])
+
+    def __iter__(self):
+        return iter(self.fss)
+
+    def deriv(self, m=1):
+        fss = [f.deriv(m) for f in self]
+        return type(self)(fss)
+
+    def filter(self, n):
+        fss = [f.filter(n) for f in self]
+        return type(self)(fss)
+
+    @classmethod
+    def from_samples(cls, x_i, T):
+        """
+        Return a collection of K fourier series.
+
+
+        Parameters:
+        -----------
+
+        x_i: array like, shape (K, M)
+            the sample points. Several signals can be transformed at once by
+            passing in a 2D-array that contains one dataset per row.
+
+        T: float
+            The period of the signals
+
+        """
+        fss = [FourierSeries.from_samples(x, T) for x in x_i]
+        return cls(fss)
+
+
