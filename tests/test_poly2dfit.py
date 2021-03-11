@@ -1,6 +1,7 @@
 import numpy as np
 import numpy.testing as nt
 import poly2d.poly2dfit as pf
+import pytest
 
 
 def explicit_poly1(x, y):
@@ -49,7 +50,7 @@ def test_Poly2D_fit():
     nt.assert_allclose(z_f, z_t)
 
 
-def test_Poly2D_fit_c00_equals_0():
+def test_Poly2D_fit_zero_cc_constraint():
     n_samples = 100
     x_sample, y_sample = 100*RNG.random(size=(2, n_samples)) - 5
     x_test, y_test = 100*RNG.random(size=(2, n_samples)) - 5
@@ -57,7 +58,7 @@ def test_Poly2D_fit_c00_equals_0():
     z_s = explicit_poly2(x_sample, y_sample)
     z_t = explicit_poly2(x_test, y_test)
 
-    poly = pf.Poly2D.fit_c00_equals_0(x_sample, y_sample, z_s, nx=4, ny=5)
+    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5, constraint="zero_cc")
 
     z_f = poly(x_test, y_test)
 
@@ -67,7 +68,7 @@ def test_Poly2D_fit_c00_equals_0():
     assert poly(0, 0) == 0
 
 
-def test_Poly2D_fit_c01c10_equals_0():
+def test_Poly2D_fit_zero_grad_constraint():
     n_samples = 100
     x_sample, y_sample = 100*RNG.random(size=(2, n_samples)) - 5
     x_test, y_test = 100*RNG.random(size=(2, n_samples)) - 5
@@ -75,7 +76,7 @@ def test_Poly2D_fit_c01c10_equals_0():
     z_s = explicit_poly3(x_sample, y_sample)
     z_t = explicit_poly3(x_test, y_test)
 
-    poly = pf.Poly2D.fit_c01c10_equals_0(x_sample, y_sample, z_s, nx=4, ny=5)
+    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5, constraint="zero_grad")
 
     z_f = poly(x_test, y_test)
 
@@ -83,6 +84,22 @@ def test_Poly2D_fit_c01c10_equals_0():
 
     assert poly.der_x(1)(0, 0) == 0
     assert poly.der_y(1)(0, 0) == 0
+
+
+def test_Poly2D_fit_unknown_constraint():
+    n_samples = 100
+    x_sample, y_sample = 100*RNG.random(size=(2, n_samples)) - 5
+
+    z_s = explicit_poly3(x_sample, y_sample)
+
+    with pytest.raises(pf.Poly2D.UnknownFitConstraintOption):
+        pf.Poly2D.fit(x_sample,
+                      y_sample,
+                      z_s,
+                      nx=4,
+                      ny=5,
+                      constraint="unknown_constraint")
+
 
 #  def test_Poly2D_fit_few_samples():
     #  n_samples = 3

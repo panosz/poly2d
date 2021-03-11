@@ -142,11 +142,9 @@ def poly2fit(x, y, z, nx, ny, scale=True):
 
 
 @pre_scaling_wrapper
-def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
+def poly2fit_zero_constant_term(x, y, z, nx, ny, scale=True):
     r"""
-    same as poly2fit, but c00 = 0, which corresponds to (x,y)=(0,0) =>z=0
-    linear system a.T table will have the 1st column removed because we
-    want/set c00=0 thus a table will have the 1st row removed
+    same as poly2fit, but with constant term set to zero.
     """
 
     a = coefs(x, y, nx, ny)
@@ -158,11 +156,9 @@ def poly2fit_c00_equals_0(x, y, z, nx, ny, scale=True):
 
 
 @pre_scaling_wrapper
-def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
+def poly2fit_zero_grad_at_origin(x, y, z, nx, ny, scale=True):
     r"""
-    same as poly2fit, but c01 = c10 = 0, which correspond to (x,y)=(0,0)
-    =>grad=0 linear system a.T table will have the 2cd (for c01), and the
-    (nx+2)th (for c10) columns thus a table will have 2 rows removed
+    same as poly2fit, but with the gradient at origin set to zero.
     """
 
     a = coefs(x, y, nx, ny)
@@ -183,6 +179,15 @@ def poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=True):
 
 
 class Poly2D():
+    class UnknownFitConstraintOption(Exception):
+        pass
+
+    fit_constraint_dict = {
+        None: poly2fit,
+        "zero_cc": poly2fit_zero_constant_term,
+        "zero_grad": poly2fit_zero_grad_at_origin,
+    }
+
     def __init__(self, coefs):
         self.c = coefs
 
@@ -200,7 +205,7 @@ class Poly2D():
         return polyval2d(x, y, self.c)
 
     @classmethod
-    def fit(cls, x, y, z, nx, ny, scale=True):
+    def fit(cls, x, y, z, nx, ny, scale=True, constraint=None):
         r"""
         Create a 2D polynomial by fitting to a set of data.
 
@@ -215,6 +220,15 @@ class Poly2D():
             carried out with respect to the maximum absolute of each parameter.
             Default is True.
 
+        constraint: str or `None`, optional
+            If set constrain the fitting process. Valid options are:
+                -- "zero_cc", which returns a polynomial with zero constant
+                    term
+                -- "zero_grad", which returns a polynomial with zero gradient
+                    at origin
+            Default is `None`.
+
+
         Returns:
         --------
         c: array
@@ -223,36 +237,15 @@ class Poly2D():
                 p(x,y) = \sum_{i,j} c_{i,j} x^i y^j
 
         """
+        try:
+            fit_method = cls.fit_constraint_dict[constraint]
+        except KeyError:
+            raise cls.UnknownFitConstraintOption(constraint)
+
         x = np.ravel(x)
         y = np.ravel(y)
         z = np.ravel(z)
-        coefs = poly2fit(x, y, z, nx, ny, scale=scale)
-        return cls(coefs)
-
-    @classmethod
-    def fit_c00_equals_0(cls, x, y, z, nx, ny, scale=True):
-        """
-        same as fit, but c00 = 0, which corresponds to (x,y)=(0,0) =>z=0
-
-        """
-        x = np.ravel(x)
-        y = np.ravel(y)
-        z = np.ravel(z)
-        coefs = poly2fit_c00_equals_0(x, y, z, nx, ny, scale=scale)
-
-        return cls(coefs)
-
-    @classmethod
-    def fit_c01c10_equals_0(cls, x, y, z, nx, ny, scale=True):
-        """
-        same as fit, but c01 = c10 = 0, which corresponds to (x,y)=(0,0)
-        =>grad=0
-        """
-        x = np.ravel(x)
-        y = np.ravel(y)
-        z = np.ravel(z)
-        coefs = poly2fit_c01c10_equals_0(x, y, z, nx, ny, scale=scale)
-
+        coefs = fit_method(x, y, z, nx, ny, scale=scale)
         return cls(coefs)
 
     def der_x(self, n):
