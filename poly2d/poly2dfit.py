@@ -248,32 +248,6 @@ class Poly2D():
         coefs = fit_method(x, y, z, nx, ny, scale=scale)
         return cls(coefs)
 
-    @classmethod
-    def fit_c00_equals_0(cls, x, y, z, nx, ny, scale=True):
-        """
-        same as fit, but c00 = 0, which corresponds to (x,y)=(0,0) =>z=0
-
-        """
-        x = np.ravel(x)
-        y = np.ravel(y)
-        z = np.ravel(z)
-        coefs = poly2fit_zero_constant_term(x, y, z, nx, ny, scale=scale)
-
-        return cls(coefs)
-
-    @classmethod
-    def fit_c01c10_equals_0(cls, x, y, z, nx, ny, scale=True):
-        """
-        same as fit, but c01 = c10 = 0, which corresponds to (x,y)=(0,0)
-        =>grad=0
-        """
-        x = np.ravel(x)
-        y = np.ravel(y)
-        z = np.ravel(z)
-        coefs = poly2fit_zero_grad_at_origin(x, y, z, nx, ny, scale=scale)
-
-        return cls(coefs)
-
     def der_x(self, n):
         if n < 0:
             raise ValueError("n must be non negative")
