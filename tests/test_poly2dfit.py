@@ -222,7 +222,7 @@ def test_Poly2D_fit_zero_cc_constraint():
 
     z_f = poly(x_test, y_test)
 
-    nt.assert_allclose(z_f, z_t)
+    nt.assert_allclose(z_f, z_t, rtol=1e-4, atol=1e-4)
 
     assert poly.c[0, 0] == 0
     assert poly(0, 0) == 0
@@ -245,7 +245,7 @@ def test_Poly2D_fit_zero_grad_constraint():
 
     z_f = poly(x_test, y_test)
 
-    nt.assert_allclose(z_f, z_t, rtol=1e-5, atol=1e-5)
+    nt.assert_allclose(z_f, z_t, rtol=1e-4, atol=1e-4)
 
     assert poly.der_x(1)(0, 0) == 0
     assert poly.der_y(1)(0, 0) == 0
