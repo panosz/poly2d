@@ -130,3 +130,6 @@ dmypy.json
 
 # pylint
 .pylintrc
+
+# youcompleteme
+.ycm_extra_conf.py
