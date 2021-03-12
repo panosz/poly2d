@@ -11,6 +11,18 @@ def explicit_poly1(x, y):
     return x**5 + 3*x**4*y**3 - 2*x*y**3 + 7
 
 
+def derivative_x2_y2_explicit_poly1(x, y):
+    return 216*x**2*y
+
+
+def derivative_x3_explicit_poly1(x, y):
+    return 60*x**2 + 72*x*y**3
+
+
+def derivative_y2_explicit_poly1(x, y):
+    return -12*x*y + 18*x**4*y
+
+
 def explicit_poly2(x, y):
     return x*2*y*3 - x*y**4
 
@@ -79,6 +91,63 @@ def test_Poly2D_derivative_correct_degree():
     dPa = Pa.der(n_dx, n_dy)
 
     assert dPa.degree == (Nx - n_dx, Ny - n_dy)
+
+
+def test_Poly2D_multiderivative_calculation():
+    Nx = 5
+    Ny = 3
+
+    A = np.zeros((Nx+1, Ny+1))
+    A[5, 0] = 1
+    A[4, 3] = 3
+    A[1, 3] = -2
+    A[0, 0] = 7
+
+    x, y = RNG.random([2, 10])
+
+    dPa = pf.Poly2D(A).der(2, 2)
+    result = dPa(x, y)
+    desired = derivative_x2_y2_explicit_poly1(x, y)
+
+    nt.assert_allclose(result, desired)
+
+
+def test_Poly2D_x_derivative_calculation():
+    Nx = 5
+    Ny = 3
+
+    A = np.zeros((Nx+1, Ny+1))
+    A[5, 0] = 1
+    A[4, 3] = 3
+    A[1, 3] = -2
+    A[0, 0] = 7
+
+    x, y = RNG.random([2, 10])
+
+    dPa = pf.Poly2D(A).der_x(3)
+    result = dPa(x, y)
+    desired = derivative_x3_explicit_poly1(x, y)
+
+    nt.assert_allclose(result, desired)
+
+
+def test_Poly2D_y_derivative_calculation():
+    Nx = 5
+    Ny = 3
+
+    A = np.zeros((Nx+1, Ny+1))
+    A[5, 0] = 1
+    A[4, 3] = 3
+    A[1, 3] = -2
+    A[0, 0] = 7
+
+    x, y = RNG.random([2, 10])
+
+    dPa = pf.Poly2D(A).der_y(2)
+    result = dPa(x, y)
+    desired = derivative_y2_explicit_poly1(x, y)
+
+    nt.assert_allclose(result, desired)
 
 
 def test_Poly2D_shifted():
