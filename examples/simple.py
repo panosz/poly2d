@@ -14,7 +14,7 @@ z = x*2*y*3 - x*y**4
 
 plt.contour(x, y, z)
 
-my_poly = Poly2D.fit(x, y, z, 4, 4)
+my_poly = Poly2D.fit(x, y, z, degree=(4, 4))
 zf = my_poly(x, y)
 
 print(f"Max error: {max(abs(z.ravel() - zf[:]))}")

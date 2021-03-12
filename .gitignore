@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# pylint
+.pylintrc
+
+# youcompleteme
+.ycm_extra_conf.py
