@@ -6,7 +6,7 @@ import numpy as np
 from numpy.polynomial.polynomial import polyval2d
 
 
-def powers(x, n):
+def calculate_powers(x, n):
     """
     Calculate the powers of x up to order n,
 
@@ -38,7 +38,7 @@ def powers(x, n):
     return out.T
 
 
-def monomials(x, y, degree):
+def calculate_monomials(x, y, degree):
     """
     Parameters:
     -----------
@@ -53,15 +53,15 @@ def monomials(x, y, degree):
        (nx+1, ny+1, Nx) shaped array
     """
     nx, ny = degree
-    xp = powers(x, nx)
-    yp = powers(y, ny)
+    xp = calculate_powers(x, nx)
+    yp = calculate_powers(y, ny)
 
     mons = xp[:, np.newaxis, :] * yp
 
     return mons
 
 
-def coefs(x, y, degree):
+def calculate_coefficients(x, y, degree):
     """
     Create the matrix of powers of x and y so that they can be
     used in a least-squares fitting algorithm.
@@ -76,7 +76,7 @@ def coefs(x, y, degree):
     # calculate the common size of the inputs after broadcasting
     x = np.ravel(x)
     y = np.ravel(y)
-    mons = monomials(x, y, degree)
+    mons = calculate_monomials(x, y, degree)
 
     return mons.reshape(-1, mons.shape[-1])
 
@@ -111,7 +111,7 @@ def _calculate_scaling_coefficients(x, y, degree):
     """
     max_abs_x = np.max(np.abs(x))
     max_abs_y = np.max(np.abs(y))
-    n_c = monomials(max_abs_x, max_abs_y, degree)
+    n_c = calculate_monomials(max_abs_x, max_abs_y, degree)
     n_c = n_c[:, :, 0]
     return x/max_abs_x, y/max_abs_y, n_c
 
@@ -159,7 +159,7 @@ def poly2fit(x, y, z, degree, scale=True):  # pylint: disable=unused-argument
             p(x,y) = \sum_{i,j} c_{i,j} x^i y^j
 
     """
-    a = coefs(x, y, degree)
+    a = calculate_coefficients(x, y, degree)
     c, *_ = np.linalg.lstsq(a.T, z, rcond=None)
     nx, ny = degree
     c = c.reshape(nx+1, ny+1)
@@ -173,7 +173,7 @@ def poly2fit_zero_constant_term(x, y, z, degree, scale=True):
     same as poly2fit, but with constant term set to zero.
     """
 
-    a = coefs(x, y, degree)
+    a = calculate_coefficients(x, y, degree)
     a_reduced = a[1:, :].T  # modified table for c00=0 (x,y,z)=(0,0,0)
     c, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
     c = np.insert(c, 0, values=0)
@@ -189,7 +189,7 @@ def poly2fit_zero_grad_at_origin(x, y, z, degree, scale=True):
     same as poly2fit, but with the gradient at origin set to zero.
     """
 
-    a = coefs(x, y, degree)
+    a = calculate_coefficients(x, y, degree)
     nx, ny = degree
 
     a1_reduced = a[0:1, :]
