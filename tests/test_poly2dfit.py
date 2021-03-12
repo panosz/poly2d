@@ -17,8 +17,29 @@ def explicit_poly3(x, y):
 RNG = np.random.default_rng(seed=0)
 
 
-def test_Poly2D():
-    A = np.zeros((6, 4))
+def test_Poly2D_knows_degree():
+    Nx = 5
+    Ny = 3
+
+    A = np.zeros((Nx+1, Ny+1))
+    A[5, 0] = 1
+    A[4, 3] = 3
+    A[1, 3] = -2
+    A[0, 0] = 7
+
+    Pa = pf.Poly2D(A)
+
+    assert Pa.degree == (Pa.nx, Pa.ny)
+
+    assert Pa.nx == 5
+    assert Pa.ny == 3
+
+
+def test_Poly2D_calculation():
+    Nx = 5
+    Ny = 3
+
+    A = np.zeros((Nx+1, Ny+1))
     A[5, 0] = 1
     A[4, 3] = 3
     A[1, 3] = -2
@@ -39,7 +60,10 @@ def test_Poly2D_derivative():
     pass
 
 def test_Poly2D_shifted():
-    A = np.zeros((6, 4))
+    Nx = 5
+    Ny = 3
+
+    A = np.zeros((Nx+1, Ny+1))
     A[5, 0] = 1
     A[4, 3] = 3
     A[1, 3] = -2

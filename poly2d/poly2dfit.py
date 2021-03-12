@@ -223,6 +223,13 @@ class Poly2DBase():
         """
         return self.coefs.shape[1]-1
 
+    @property
+    def degree(self):
+        """
+        (nx, ny)
+        """
+        return self.nx, self.ny
+
     def __call__(self, x, y):
         x = np.ravel(x)
         y = np.ravel(y)
