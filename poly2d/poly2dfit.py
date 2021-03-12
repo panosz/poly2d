@@ -178,7 +178,15 @@ def poly2fit_zero_grad_at_origin(x, y, z, nx, ny, scale=True):
     return c
 
 
-class Poly2D():
+class Poly2DBase():
+    r"""
+    A 2D polynomial  \sum c_{i,j} x^i y^j.
+
+    Parameters:
+    -----------
+    coefs: array like, shape (nx+1, ny+1)
+        The polynomial coefficients
+    """
     class UnknownFitConstraintOption(Exception):
         pass
 
@@ -193,10 +201,16 @@ class Poly2D():
 
     @property
     def nx(self):
+        """
+        The degree in x
+        """
         return self.c.shape[0]-1
 
     @property
     def ny(self):
+        """
+        The degree in y
+        """
         return self.c.shape[1]-1
 
     def __call__(self, x, y):
@@ -233,7 +247,7 @@ class Poly2D():
         --------
         c: array
             The polynomial coefficients.
-            (nx+1, ny+1) shaped array representing a 2D polygon:
+            (nx+1, ny+1) shaped array representing a 2D polynomial:
                 p(x,y) = \sum_{i,j} c_{i,j} x^i y^j
 
         """
@@ -289,4 +303,77 @@ def der_coefs(n, degree):
     m_elems = degree + 1 - n
     arrays = [np.arange(i, i + m_elems) for i in range(1, n+1)]
     return reduce(np.multiply, arrays)
+
+
+class Poly2D(Poly2DBase):
+    r"""
+    A 2D polynomial centered at (x0, y0)
+        \sum c_{i,j} (x - x0) ^i (y - y0)^j.
+
+    Parameters:
+    -----------
+    coefs: array like, shape (nx+1, ny+1)
+        The polynomial coefficients
+    center: (x0, y0), optional
+        The origin of the polynomial.
+        Default is (0, 0)
+    """
+
+    def __init__(self, coefs, center=(0, 0)):
+        super().__init__(coefs)
+        self.x0, self.y0 = center
+
+    def __call__(self, x, y):
+        return super().__call__(x - self.x0, y - self.y0)
+
+    @classmethod
+    def fit(cls, x, y, z, nx, ny, center=(0, 0), scale=True, constraint=None):
+        r"""
+        Create a 2D polynomial centered at (x0, y0) by fitting to a set of data.
+
+        x, y, z: array
+            The data.
+
+        nx, ny: int, positive
+            The x and y orders of the polynomial.
+
+        center: (x0, y0), optional
+            The origin of the polynomial.
+            Default is (0, 0)
+
+        scale: bool, optional
+            Whether to scale the `x` and `y` data before fitting.  Scaling is
+            carried out with respect to the maximum absolute of each parameter.
+            Default is True.
+
+        constraint: str or `None`, optional
+            If set constrain the fitting process. Valid options are:
+                -- "zero_cc", which returns a polynomial with zero constant
+                    term
+                -- "zero_grad", which returns a polynomial with zero gradient
+                    at origin
+            Default is `None`.
+
+
+        Returns:
+        --------
+        c: array
+            The polynomial coefficients.
+            (nx+1, ny+1) shaped array representing a 2D polynomial:
+                p(x,y) = \sum_{i,j} c_{i,j} x^i y^j
+
+        """
+        x0, y0 = center
+
+        base = super().fit(x - x0,
+                           y - y0,
+                           z,
+                           nx,
+                           ny,
+                           scale=scale,
+                           constraint=constraint,
+                           )
+
+        return cls(base.c, center)
+
 

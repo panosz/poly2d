@@ -35,6 +35,30 @@ def test_Poly2D():
     nt.assert_allclose(result, desired)
 
 
+def test_Poly2D_derivative():
+    pass
+
+def test_Poly2D_shifted():
+    A = np.zeros((6, 4))
+    A[5, 0] = 1
+    A[4, 3] = 3
+    A[1, 3] = -2
+    A[0, 0] = 7
+
+    x0 = 3
+    y0 = -2
+
+    Pa = pf.Poly2D(A, center=(x0, y0))
+
+    x, y = RNG.random([2, 10])
+
+    result = Pa(x, y)
+
+    desired = explicit_poly1(x - x0, y - y0)
+
+    nt.assert_allclose(result, desired)
+
+
 def test_Poly2D_fit():
     n_samples = 100
     x_sample, y_sample = 100*RNG.random(size=(2, n_samples)) - 50
@@ -48,6 +72,22 @@ def test_Poly2D_fit():
     z_f = poly(x_test, y_test)
 
     nt.assert_allclose(z_f, z_t)
+
+def test_Poly2D_fit_shifted():
+    x0, y0 = -4, 3
+    n_samples = 100
+    x_sample, y_sample = 100*RNG.random(size=(2, n_samples)) - 50
+    x_test, y_test = 100*RNG.random(size=(2, n_samples)) - 50
+
+    z_s = explicit_poly2(x_sample, y_sample)
+    z_t = explicit_poly2(x_test, y_test)
+
+    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5, center=(x0, y0))
+
+    z_f = poly(x_test, y_test)
+
+    nt.assert_allclose(z_f, z_t)
+
 
 
 def test_Poly2D_fit_zero_cc_constraint():
@@ -99,22 +139,4 @@ def test_Poly2D_fit_unknown_constraint():
                       nx=4,
                       ny=5,
                       constraint="unknown_constraint")
-
-
-#  def test_Poly2D_fit_few_samples():
-    #  n_samples = 3
-    #  x_sample, y_sample = 10*RNG.random(size=(2, n_samples)) - 5
-    #  x_test, y_test = 10*RNG.random(size=(2, n_samples)) - 5
-
-    #  z_s = explicit_poly2(x_sample, y_sample)
-    #  z_t = explicit_poly2(x_test, y_test)
-
-    #  poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5)
-
-    #  z_f = poly(x_test, y_test)
-
-    #  nt.assert_allclose(z_f, z_t)
-
-    #  assert False
-
 
