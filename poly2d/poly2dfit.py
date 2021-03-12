@@ -130,13 +130,13 @@ def pre_scaling_wrapper(coefficient_estimator):
             x_s, y_s, n_c = _calculate_scaling_coefficients(x, y, degree)
             c = coefficient_estimator(x_s, y_s, z, degree, scale, **kwargs)
             return c / n_c
-        else:
-            return coefficient_estimator(x, y, z, degree, scale, **kwargs)
+
+        return coefficient_estimator(x, y, z, degree, scale, **kwargs)
     return wrapper
 
 
 @pre_scaling_wrapper
-def poly2fit(x, y, z, degree, scale=True):
+def poly2fit(x, y, z, degree, scale=True):  # pylint: disable=unused-argument
     r"""
     Fit a 2D polynomial to a set of data.
 
@@ -168,6 +168,7 @@ def poly2fit(x, y, z, degree, scale=True):
 
 @pre_scaling_wrapper
 def poly2fit_zero_constant_term(x, y, z, degree, scale=True):
+    # pylint: disable=unused-argument
     r"""
     same as poly2fit, but with constant term set to zero.
     """
@@ -183,6 +184,7 @@ def poly2fit_zero_constant_term(x, y, z, degree, scale=True):
 
 @pre_scaling_wrapper
 def poly2fit_zero_grad_at_origin(x, y, z, degree, scale=True):
+    # pylint: disable=unused-argument
     r"""
     same as poly2fit, but with the gradient at origin set to zero.
     """
@@ -199,7 +201,7 @@ def poly2fit_zero_grad_at_origin(x, y, z, degree, scale=True):
                                 ), axis=0)
 
     a_reduced = a_reduced.T  # modified table for c00=0 (x,y,z)=(0,0,0)
-    c, residual, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
+    c, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
     c = np.insert(c, 1, 0)   # insert c01=0
     c = np.insert(c, ny+1, 0)   # insert c10=0
     c = c.reshape(nx+1, ny+1)
@@ -417,5 +419,3 @@ class Poly2D(Poly2DBase):
                            )
 
         return cls(base.coefs, center)
-
-
