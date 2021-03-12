@@ -1,3 +1,6 @@
+"""
+2D Polynomials with fitting capability.
+"""
 from functools import reduce, wraps
 import numpy as np
 from numpy.polynomial.polynomial import polyval2d
@@ -197,26 +200,33 @@ class Poly2DBase():
     }
 
     def __init__(self, coefs):
-        self.c = coefs
+        self.coefs = coefs
+
+    @property
+    def c(self):
+        """
+        alias for `coefs`
+        """
+        return self.coefs
 
     @property
     def nx(self):
         """
         The degree in x
         """
-        return self.c.shape[0]-1
+        return self.coefs.shape[0]-1
 
     @property
     def ny(self):
         """
         The degree in y
         """
-        return self.c.shape[1]-1
+        return self.coefs.shape[1]-1
 
     def __call__(self, x, y):
         x = np.ravel(x)
         y = np.ravel(y)
-        return polyval2d(x, y, self.c)
+        return polyval2d(x, y, self.coefs)
 
     @classmethod
     def fit(cls, x, y, z, nx, ny, scale=True, constraint=None):
@@ -274,7 +284,7 @@ class Poly2DBase():
 
         coef_col = der_coefs(n, nx)
 
-        out_coefs = coef_col * self.c[n:, :].T  # use some broadcast magic
+        out_coefs = coef_col * self.coefs[n:, :].T  # use some broadcast magic
         out_coefs = out_coefs.T
 
         return cls(out_coefs)
@@ -291,7 +301,7 @@ class Poly2DBase():
 
         coef_row = der_coefs(n, ny)
 
-        out_coefs = coef_row * self.c[:, n:]
+        out_coefs = coef_row * self.coefs[:, n:]
 
         return cls(out_coefs)
 
@@ -329,7 +339,8 @@ class Poly2D(Poly2DBase):
     @classmethod
     def fit(cls, x, y, z, nx, ny, center=(0, 0), scale=True, constraint=None):
         r"""
-        Create a 2D polynomial centered at (x0, y0) by fitting to a set of data.
+        Create a 2D polynomial centered at (x0, y0) by fitting to a set of
+        data.
 
         x, y, z: array
             The data.
@@ -374,6 +385,6 @@ class Poly2D(Poly2DBase):
                            constraint=constraint,
                            )
 
-        return cls(base.c, center)
+        return cls(base.coefs, center)
 
 
