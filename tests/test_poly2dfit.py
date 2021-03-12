@@ -182,7 +182,7 @@ def test_Poly2D_fit():
     z_s = explicit_poly2(x_sample, y_sample)
     z_t = explicit_poly2(x_test, y_test)
 
-    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5)
+    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, degree=(4, 5))
 
     z_f = poly(x_test, y_test)
 
@@ -198,7 +198,12 @@ def test_Poly2D_fit_shifted():
     z_s = explicit_poly2(x_sample, y_sample)
     z_t = explicit_poly2(x_test, y_test)
 
-    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5, center=(x0, y0))
+    poly = pf.Poly2D.fit(x_sample,
+                         y_sample,
+                         z_s,
+                         degree=(4, 5),
+                         center=(x0, y0),
+                         )
 
     z_f = poly(x_test, y_test)
 
@@ -216,8 +221,7 @@ def test_Poly2D_fit_zero_cc_constraint():
     poly = pf.Poly2D.fit(x_sample,
                          y_sample,
                          z_s,
-                         nx=4,
-                         ny=5,
+                         degree=(4, 5),
                          constraint="zero_cc")
 
     z_f = poly(x_test, y_test)
@@ -239,8 +243,7 @@ def test_Poly2D_fit_zero_grad_constraint():
     poly = pf.Poly2D.fit(x_sample,
                          y_sample,
                          z_s,
-                         nx=4,
-                         ny=5,
+                         degree=(4, 5),
                          constraint="zero_grad")
 
     z_f = poly(x_test, y_test)
@@ -261,6 +264,5 @@ def test_Poly2D_fit_unknown_constraint():
         pf.Poly2D.fit(x_sample,
                       y_sample,
                       z_s,
-                      nx=4,
-                      ny=5,
+                      degree=(4, 5),
                       constraint="unknown_constraint")

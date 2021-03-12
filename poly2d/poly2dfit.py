@@ -38,13 +38,21 @@ def powers(x, n):
     return out.T
 
 
-def monomials(x, y, nx, ny):
+def monomials(x, y, degree):
     """
+    Parameters:
+    -----------
+    x,y : array like
+
+    degree: (nx, ny)
+        The maximum x and y power.
+
     Returns:
     --------
     out: array
        (nx+1, ny+1, Nx) shaped array
     """
+    nx, ny = degree
     xp = powers(x, nx)
     yp = powers(y, ny)
 
@@ -53,21 +61,27 @@ def monomials(x, y, nx, ny):
     return mons
 
 
-def coefs(x, y, nx, ny):
+def coefs(x, y, degree):
     """
     Create the matrix of powers of x and y so that they can be
     used in a least-squares fitting algorithm.
+
+    Parameters:
+    -----------
+    x,y : array like
+
+    degree: (nx, ny)
+        The maximum x and y power.
     """
     # calculate the common size of the inputs after broadcasting
     x = np.ravel(x)
     y = np.ravel(y)
-
-    mons = monomials(x, y, nx, ny)
+    mons = monomials(x, y, degree)
 
     return mons.reshape(-1, mons.shape[-1])
 
 
-def _calculate_scaling_coefficients(x, y, nx, ny):
+def _calculate_scaling_coefficients(x, y, degree):
     """
     To be used with coefficient estimators in order to support
     pre-scaling functionality for better numerical stability.
@@ -82,6 +96,13 @@ def _calculate_scaling_coefficients(x, y, nx, ny):
     is equivalent with calling the estimator with the unscaled samples, only
     with better numerical stability.
 
+    Parameters:
+    -----------
+    x,y : array like
+
+    degree: (nx, ny)
+        The maximum x and y power.
+
     Returns:
     --------
     x_scaled, y_scaled: the scaled samples
@@ -90,7 +111,7 @@ def _calculate_scaling_coefficients(x, y, nx, ny):
     """
     max_abs_x = np.max(np.abs(x))
     max_abs_y = np.max(np.abs(y))
-    n_c = monomials(max_abs_x, max_abs_y, nx, ny)
+    n_c = monomials(max_abs_x, max_abs_y, degree)
     n_c = n_c[:, :, 0]
     return x/max_abs_x, y/max_abs_y, n_c
 
@@ -101,28 +122,28 @@ def pre_scaling_wrapper(coefficient_estimator):
     samples for better numerical stability.
 
     The signature of the estimator must be of the form
-    f(x, y, z, nx, ny, scale=True, **kwargs)
+    f(x, y, z, degree, scale=True, **kwargs)
     """
     @wraps(coefficient_estimator)
-    def wrapper(x, y, z, nx, ny, scale=True, **kwargs):
+    def wrapper(x, y, z, degree, scale=True, **kwargs):
         if scale:
-            x_s, y_s, n_c = _calculate_scaling_coefficients(x, y, nx, ny)
-            c = coefficient_estimator(x_s, y_s, z, nx, ny, scale, **kwargs)
+            x_s, y_s, n_c = _calculate_scaling_coefficients(x, y, degree)
+            c = coefficient_estimator(x_s, y_s, z, degree, scale, **kwargs)
             return c / n_c
         else:
-            return coefficient_estimator(x, y, z, nx, ny, scale, **kwargs)
+            return coefficient_estimator(x, y, z, degree, scale, **kwargs)
     return wrapper
 
 
 @pre_scaling_wrapper
-def poly2fit(x, y, z, nx, ny, scale=True):
+def poly2fit(x, y, z, degree, scale=True):
     r"""
     Fit a 2D polynomial to a set of data.
 
     x, y, z: array
         The data.
 
-    nx, ny: int, positive
+    degree: (nx, ny)
         The x and y orders of the polynomial.
 
     scale: bool, optional
@@ -138,33 +159,37 @@ def poly2fit(x, y, z, nx, ny, scale=True):
             p(x,y) = \sum_{i,j} c_{i,j} x^i y^j
 
     """
-    a = coefs(x, y, nx, ny)
+    a = coefs(x, y, degree)
     c, *_ = np.linalg.lstsq(a.T, z, rcond=None)
+    nx, ny = degree
     c = c.reshape(nx+1, ny+1)
     return c
 
 
 @pre_scaling_wrapper
-def poly2fit_zero_constant_term(x, y, z, nx, ny, scale=True):
+def poly2fit_zero_constant_term(x, y, z, degree, scale=True):
     r"""
     same as poly2fit, but with constant term set to zero.
     """
 
-    a = coefs(x, y, nx, ny)
+    a = coefs(x, y, degree)
     a_reduced = a[1:, :].T  # modified table for c00=0 (x,y,z)=(0,0,0)
     c, *_ = np.linalg.lstsq(a_reduced, z, rcond=None)
     c = np.insert(c, 0, values=0)
+    nx, ny = degree
     c = c.reshape(nx+1, ny+1)
     return c
 
 
 @pre_scaling_wrapper
-def poly2fit_zero_grad_at_origin(x, y, z, nx, ny, scale=True):
+def poly2fit_zero_grad_at_origin(x, y, z, degree, scale=True):
     r"""
     same as poly2fit, but with the gradient at origin set to zero.
     """
 
-    a = coefs(x, y, nx, ny)
+    a = coefs(x, y, degree)
+    nx, ny = degree
+
     a1_reduced = a[0:1, :]
     a2_reduced = a[2:ny+1, :]
     a3_reduced = a[ny+2:, :]
@@ -236,14 +261,14 @@ class Poly2DBase():
         return polyval2d(x, y, self.coefs)
 
     @classmethod
-    def fit(cls, x, y, z, nx, ny, scale=True, constraint=None):
+    def fit(cls, x, y, z, degree, scale=True, constraint=None):
         r"""
         Create a 2D polynomial by fitting to a set of data.
 
         x, y, z: array
             The data.
 
-        nx, ny: int, positive
+        degree: (nx, ny)
             The x and y orders of the polynomial.
 
         scale: bool, optional
@@ -276,7 +301,7 @@ class Poly2DBase():
         x = np.ravel(x)
         y = np.ravel(y)
         z = np.ravel(z)
-        coefs = fit_method(x, y, z, nx, ny, scale=scale)
+        coefs = fit_method(x, y, z, degree, scale=scale)
         return cls(coefs)
 
     def der_x(self, n):
@@ -344,7 +369,7 @@ class Poly2D(Poly2DBase):
         return super().__call__(x - self.x0, y - self.y0)
 
     @classmethod
-    def fit(cls, x, y, z, nx, ny, center=(0, 0), scale=True, constraint=None):
+    def fit(cls, x, y, z, degree, center=(0, 0), scale=True, constraint=None):
         r"""
         Create a 2D polynomial centered at (x0, y0) by fitting to a set of
         data.
@@ -352,7 +377,7 @@ class Poly2D(Poly2DBase):
         x, y, z: array
             The data.
 
-        nx, ny: int, positive
+        degree: (nx, ny)
             The x and y orders of the polynomial.
 
         center: (x0, y0), optional
@@ -386,8 +411,7 @@ class Poly2D(Poly2DBase):
         base = super().fit(x - x0,
                            y - y0,
                            z,
-                           nx,
-                           ny,
+                           degree,
                            scale=scale,
                            constraint=constraint,
                            )
