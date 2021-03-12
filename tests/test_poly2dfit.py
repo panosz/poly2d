@@ -1,17 +1,22 @@
+"""
+Tests for pol2dfit module.
+"""
 import numpy as np
 import numpy.testing as nt
-import poly2d.poly2dfit as pf
 import pytest
+import poly2d.poly2dfit as pf
 
 
 def explicit_poly1(x, y):
     return x**5 + 3*x**4*y**3 - 2*x*y**3 + 7
 
+
 def explicit_poly2(x, y):
     return x*2*y*3 - x*y**4
 
+
 def explicit_poly3(x, y):
-    return x*2*y*3 - x*y**4 + 1e-5*x +1e-5*y
+    return x*2*y*3 - x*y**4 + 1e-5*x + 1e-5*y
 
 
 RNG = np.random.default_rng(seed=0)
@@ -75,6 +80,7 @@ def test_Poly2D_derivative_correct_degree():
 
     assert dPa.degree == (Nx - n_dx, Ny - n_dy)
 
+
 def test_Poly2D_shifted():
     Nx = 5
     Ny = 3
@@ -113,6 +119,7 @@ def test_Poly2D_fit():
 
     nt.assert_allclose(z_f, z_t)
 
+
 def test_Poly2D_fit_shifted():
     x0, y0 = -4, 3
     n_samples = 100
@@ -129,7 +136,6 @@ def test_Poly2D_fit_shifted():
     nt.assert_allclose(z_f, z_t)
 
 
-
 def test_Poly2D_fit_zero_cc_constraint():
     n_samples = 100
     x_sample, y_sample = 100*RNG.random(size=(2, n_samples)) - 5
@@ -138,7 +144,12 @@ def test_Poly2D_fit_zero_cc_constraint():
     z_s = explicit_poly2(x_sample, y_sample)
     z_t = explicit_poly2(x_test, y_test)
 
-    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5, constraint="zero_cc")
+    poly = pf.Poly2D.fit(x_sample,
+                         y_sample,
+                         z_s,
+                         nx=4,
+                         ny=5,
+                         constraint="zero_cc")
 
     z_f = poly(x_test, y_test)
 
@@ -156,7 +167,12 @@ def test_Poly2D_fit_zero_grad_constraint():
     z_s = explicit_poly3(x_sample, y_sample)
     z_t = explicit_poly3(x_test, y_test)
 
-    poly = pf.Poly2D.fit(x_sample, y_sample, z_s, nx=4, ny=5, constraint="zero_grad")
+    poly = pf.Poly2D.fit(x_sample,
+                         y_sample,
+                         z_s,
+                         nx=4,
+                         ny=5,
+                         constraint="zero_grad")
 
     z_f = poly(x_test, y_test)
 
@@ -179,4 +195,3 @@ def test_Poly2D_fit_unknown_constraint():
                       nx=4,
                       ny=5,
                       constraint="unknown_constraint")
-
