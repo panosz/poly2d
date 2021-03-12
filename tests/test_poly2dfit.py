@@ -56,8 +56,24 @@ def test_Poly2D_calculation():
     nt.assert_allclose(result, desired)
 
 
-def test_Poly2D_derivative():
-    pass
+def test_Poly2D_derivative_correct_degree():
+    Nx = 5
+    Ny = 3
+
+    n_dx = 2
+    n_dy = 2
+
+    A = np.zeros((Nx+1, Ny+1))
+    A[5, 0] = 1
+    A[4, 3] = 3
+    A[1, 3] = -2
+    A[0, 0] = 7
+
+    Pa = pf.Poly2D(A)
+
+    dPa = Pa.der(n_dx, n_dy)
+
+    assert dPa.degree == (Nx - n_dx, Ny - n_dy)
 
 def test_Poly2D_shifted():
     Nx = 5
